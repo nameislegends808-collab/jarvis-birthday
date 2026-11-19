@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jarvis — Tug'ilgan Kun Yordamchisi</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: radial-gradient(circle at top, #0f172a, #030712);
+      color: #f8fafc;
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 460px;
+      background: #0f172a;
+      border: 2px solid #1e293b;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.2);
+    }
+    .header {
+      text-align: center;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .header h1 {
+      font-size: 20px;
+      color: #38bdf8;
+      letter-spacing: 1px;
+    }
+    .header p {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+    .cake-box {
+      text-align: center;
+      font-size: 46px;
+      margin: 10px 0;
+      animation: bounce 1.8s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      border-left: 4px solid #38bdf8;
+    }
+    .card h3 {
+      font-size: 14px;
+      color: #facc15;
+      margin-bottom: 6px;
+    }
+    .poem-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #fde68a;
+      font-style: italic;
+      white-space: pre-line;
+    }
+    .input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    input {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus { border-color: #38bdf8; }
+    button {
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+      transition: 0.2s;
+    }
+    button:hover { background: #0284c7; }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .btn-green { background: #10b981; }
+    .btn-green:hover { background: #059669; }
+    .btn-purple { background: #6366f1; }
+    .btn-purple:hover { background: #4f46e5; }
+    .jarvis-box {
+      background: #090d16;
+      border: 1px solid #38bdf8;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .jarvis-reply {
+      font-size: 13.5px;
+      color: #e2e8f0;
+      min-height: 56px;
+      margin-bottom: 10px;
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚡ JARVIS BIRTHDAY HUB ⚡</h1>
+      <p id="welcomeText">Xush kelibsiz, ser! Tizim faol holatda.</p>
+    </div>
+
+    <div class="cake-box">🎂👑🎉</div>
+
+    <div class="input-group">
+      <input type="text" id="nameInput" placeholder="Tabriklanuvchi ismini yozing..." />
+      <button onclick="greetPerson()">Tabriklash</button>
+    </div>
+
+    <div class="card">
+      <h3 id="greetTitle">🔥 TUG'ILGAN KUN MUBORAK!</h3>
+      <div class="poem-text" id="poemBox">Bahor chechaklari bo'lsin armug'on,
+Siz nurli insonsiz, baxtli begumon,
+Bayramla qutlayman, bo'ling shodumon,
+Har kuningiz o'tsin bayramday har on!</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-green" onclick="newPoem()">📜 Yangi she'r</button>
+      <button class="btn-purple" onclick="copyGreeting()">📋 Nusxa olish</button>
+    </div>
+
+    <div class="jarvis-box">
+      <div class="jarvis-reply" id="jarvisReply">🤖 Jarvis: Salom, ser! Menga savol bering yoki ism yozib tabrik tayyorlang.</div>
+      <div class="input-group" style="margin-bottom: 0;">
+        <input type="text" id="askInput" placeholder="Jarvisga yozing (masalan: she'r, vaqt, tilak)..." onkeydown="if(event.key==='Enter') askJarvis()" />
+        <button onclick="askJarvis()">Yuborish</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      const user = tg.initDataUnsafe?.user;
+      if (user?.first_name) {
+        document.getElementById("welcomeText").innerText = `Salom, ${user.first_name}! Jarvis xizmatingizda.`;
+      }
+    }
+
+    const poems = [
+      "Bahor chechaklari bo'lsin armug'on,\nSiz nurli insonsiz, baxtli begumon,\nBayramla qutlayman, bo'ling shodumon,\nHar kuningiz o'tsin bayramday har on!",
+      "Atirgul gulidan sizga guldasta,\nChin yurak so'zlarim unga payvasta,\nBir asr yashangu yana nim chorak,\nTavallud kuningiz bo'lsin muborak!",
+      "Tilaklar ichida izlab topganim,\nAlloh nigohini sizga qaratsin.\nYagona o'tinchim Allohdan bu kun,\nSizdek insonlarni ko'proq yaratsin!",
+      "Tavallud kuningiz bo'lsin muborak,\nOliy maqsadlar qo'shqanot bo'lsin,\nDunyoda ko'rmangiz qayg'u ila g'am,\nOmad va quvonch doim yor bo'lsin!"
+    ];
+
+    function newPoem() {
+      const randomPoem = poems[Math.floor(Math.random() * poems.length)];
+      document.getElementById("poemBox").innerText = randomPoem;
+    }
+
+    function greetPerson() {
+      const name = document.getElementById("nameInput").value.trim() || "Aziz inson";
+      document.getElementById("greetTitle").innerText = `👑 ${name.toUpperCase()} — TUG'ILGAN KUN MUBORAK!`;
+      newPoem();
+      document.getElementById("jarvisReply").innerText = `🤖 Jarvis: ${name} uchun maxsus bayram tabrigi tayyorlandi, ser!`;
+    }
+
+    function copyGreeting() {
+      const title = document.getElementById("greetTitle").innerText;
+      const poem = document.getElementById("poemBox").innerText;
+      const fullText = `${title}\n\n${poem}\n\n🤖 Jarvis tomonidan tayyorlandi 🚀`;
+      navigator.clipboard.writeText(fullText);
+      document.getElementById("jarvisReply").innerText = "✅ Tabrik matni nusxalandi! Endi Telegramda istalgan odamga yuborishingiz mumkin.";
+    }
+
+    function askJarvis() {
+      const input = document.getElementById("askInput");
+      const q = input.value.trim().toLowerCase();
+      if (!q) return;
+      input.value = "";
+
+      const replyBox = document.getElementById("jarvisReply");
+      if (q.includes("sher") || q.includes("she'r")) {
+        newPoem();
+        replyBox.innerText = "🤖 Jarvis: Yangi tabrik she'ri yuqoridagi oynaga chiqarildi, ser!";
+      } else if (q.includes("vaqt") || q.includes("soat") || q.includes("sana")) {
+        const now = new Date();
+        replyBox.innerText = `🤖 Jarvis: Hozirgi vaqt — ${now.toLocaleString("uz-UZ")}`;
+      } else if (q.includes("tilak")) {
+        replyBox.innerText = "🤖 Jarvis: Yangi yoshda mustahkam sog'lik, oilaviy xotirjamlik va barcha rejalaringiz amalga oshishini tilayman!";
+      } else {
+        replyBox.innerText = `🤖 Jarvis: "${q}" buyrug'i qabul qilindi, ser. Tabriklash, she'r tanlash yoki matn nusxalashda yordam berishga tayyorman!`;
+      }
+    }
+  </script>
+</body>
+</html>
